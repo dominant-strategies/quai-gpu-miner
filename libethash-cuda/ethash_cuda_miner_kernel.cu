@@ -61,7 +61,7 @@ void run_ethash_search(uint32_t gridSize, uint32_t blockSize, cudaStream_t strea
     CUDA_SAFE_CALL(cudaGetLastError());
 }
 
-#define ETHASH_DATASET_PARENTS 512
+#define ETHASH_DATASET_PARENTS 256
 #define NODE_WORDS (64 / 4)
 
 

@@ -7,7 +7,7 @@
 #include "CUDAMiner_cuda.h"
 #include "cuda_helper.h"
 #define ETHASH_HASH_BYTES 64
-#define ETHASH_DATASET_PARENTS 512
+#define ETHASH_DATASET_PARENTS 256
 
 #include "progpow_cuda_miner_kernel_globals.h"
 
