@@ -14,5 +14,5 @@ hunter_add_package(OpenSSL)
 find_package(OpenSSL REQUIRED)
 
 add_library(poolprotocols ${SOURCES})
-target_link_libraries(poolprotocols PRIVATE devcore kawpowminer-buildinfo ethash::ethash Boost::system jsoncpp_lib_static OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(poolprotocols PRIVATE devcore kawpowminer-buildinfo ethash Boost::system jsoncpp_lib_static OpenSSL::SSL OpenSSL::Crypto)
 target_include_directories(poolprotocols PRIVATE ..)

@@ -70,7 +70,7 @@ add_dependencies(ethash-cuda cuda_kernel)
 # Cmake doesn't handle nvrtc automatically
 find_library(CUDA_nvrtc_LIBRARY NAMES nvrtc PATHS ${CUDA_TOOLKIT_ROOT_DIR} PATH_SUFFIXES lib64 lib/x64 lib64/stubs lib/x64/stubs lib NO_DEFAULT_PATH)
 find_library(CUDA_cuda_LIBRARY NAMES cuda PATHS ${CUDA_TOOLKIT_ROOT_DIR} PATH_SUFFIXES lib64 lib/x64 lib64/stubs lib/x64/stubs lib NO_DEFAULT_PATH)
-target_link_libraries(ethash-cuda ethcore ethash::ethash progpow Boost::thread)
+target_link_libraries(ethash-cuda ethcore ethash progpow Boost::thread)
 target_link_libraries(ethash-cuda ${CUDA_nvrtc_LIBRARY} ${CUDA_cuda_LIBRARY})
 target_include_directories(ethash-cuda PUBLIC ${CUDA_INCLUDE_DIRS})
 target_include_directories(ethash-cuda PRIVATE .. ${CMAKE_CURRENT_BINARY_DIR})

@@ -59,9 +59,6 @@ find_package(Boost CONFIG REQUIRED COMPONENTS system filesystem thread)
 hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
 
-hunter_add_package(ethash)
-find_package(ethash CONFIG REQUIRED)
-
 configureProject()
 
 message("----------------------------------------------------------------------------")
@@ -85,6 +82,9 @@ endif()
 
 cable_add_buildinfo_library(PROJECT_NAME ${PROJECT_NAME})
 
+include_directories(${PROJECT_SOURCE_DIR}/libethash)
+
+add_subdirectory(libethash)
 add_subdirectory(libprogpow)
 add_subdirectory(libdevcore)
 add_subdirectory(libethcore)
