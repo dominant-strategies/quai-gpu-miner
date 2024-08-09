@@ -4,7 +4,7 @@
 #include <string>
 
 // blocks before changing the random program
-#define PROGPOW_PERIOD          3
+#define PROGPOW_PERIOD          10
 // lanes that work together calculating a hash
 #define PROGPOW_LANES           16
 // uint32 registers per lane
@@ -20,7 +20,7 @@
 // random math instructions per loop
 #define PROGPOW_CNT_MATH        18
 
-#define EPOCH_LENGTH            7500
+#define EPOCH_LENGTH            4320
 
 class ProgPow
 {
