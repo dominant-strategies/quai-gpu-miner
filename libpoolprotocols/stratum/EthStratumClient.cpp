@@ -1473,6 +1473,9 @@ void EthStratumClient::processResponse(Json::Value& responseObject)
 
             m_current.header = h256(header);
             m_current.boundary = h256(m_session->nextWorkBoundary.hex(HexPrefix::Add));
+            if (m_current.epoch != -1 && m_current.epoch != m_session->epoch) {
+                m_epochChanged = true;
+            }
             m_current.epoch = m_session->epoch;
             m_current.algo = m_session->algo;
             m_current.startNonce = m_session->extraNonce;
@@ -1816,9 +1819,15 @@ void EthStratumClient::onRecvSocketDataCompleted(
         }
 
         // There is a new job - dispatch it
-        if (m_newjobprocessed)
-            if (m_onWorkReceived)
+        if (m_newjobprocessed) {
+            if (m_onWorkReceived) {
+                if (m_epochChanged) {
+                    Farm::f().restart();
+                    m_epochChanged = false;
+                }
                 m_onWorkReceived(m_current);
+            }
+        }
 
         // Eventually keep reading from socket
         if (isConnected())

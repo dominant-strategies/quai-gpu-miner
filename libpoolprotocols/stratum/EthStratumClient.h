@@ -128,6 +128,7 @@ private:
     boost::asio::ip::tcp::socket* m_socket;
     std::string m_message;  // The internal message string buffer
     bool m_newjobprocessed = false;
+    bool m_epochChanged = false;
 
     // Use shared ptrs to avoid crashes due to async_writes
     // see
