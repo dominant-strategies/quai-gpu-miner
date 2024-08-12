@@ -19,10 +19,10 @@ HunterGate(
 	LOCAL
 )
 
+cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo)
+
 project(kawpowminer)
 set(PROJECT_VERSION 1.2.4)
-
-cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo)
 
 option(ETHASHCL "Build with OpenCL mining" ON)
 option(ETHASHCUDA "Build with CUDA mining" ON)
