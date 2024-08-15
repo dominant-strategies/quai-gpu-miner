@@ -38,7 +38,7 @@ fi
 
 # configure cmake
 cd '/home/user/quai-gpu-miner/build'
-cmake ..
+cmake .. -DETHASHCUDA=ON -DETHASHCL=OFF
 
 # build cmake
 cmake --build .
