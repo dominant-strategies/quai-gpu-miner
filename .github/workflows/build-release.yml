@@ -1,0 +1,118 @@
+name: Build and Tag Quai GPU Miner
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_version:
+        description: 'Tag version for the release (e.g., v1.0.0)'
+        required: true
+      branch:
+        description: 'Branch to release from (e.g., main, develop)'
+        default: 'main'
+        required: true
+
+jobs:
+  build-and-tag:
+    name: Build and Tag
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GH_PAT }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          echo -e "Host github.com\n  IdentityFile ~/.ssh/id_rsa\n  StrictHostKeyChecking no" > ~/.ssh/config
+          chmod 644 ~/.ssh/config
+
+      - name: Set Git user configuration
+        run: |
+          git config --global user.name "ci-dominantstrategies"
+          git config --global user.email "ci@dominantstrategies.io"
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Import GPG Key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --import
+          git config --global user.signingkey $GPG_KEY_ID
+          git config --global commit.gpgsign true
+          git config --global tag.gpgsign true
+          gpg --list-keys "$GPG_KEY_ID"
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git \
+            cmake \
+            build-essential \
+            mesa-common-dev \
+            wget \
+            pkg-config \
+            gnupg \
+            curl
+
+      - name: Install NVIDIA CUDA Toolkit
+        run: |
+          # Add NVIDIA package repositories
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+          sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+          sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
+          echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /" | sudo tee /etc/apt/sources.list.d/cuda.list
+          sudo apt-get update
+          # Install CUDA Toolkit without NVIDIA driver
+          sudo apt-get install -y --no-install-recommends cuda-toolkit-11-8
+          # Set up environment variables
+          echo "/usr/local/cuda-11.8/lib64" | sudo tee /etc/ld.so.conf.d/cuda.conf
+          sudo ldconfig
+          echo 'export PATH=/usr/local/cuda-11.8/bin:$PATH' >> $GITHUB_ENV
+
+      - name: Verify CUDA Installation
+        run: nvcc --version
+
+      - name: Build the Miner
+        run: |
+          git submodule update --init --recursive
+          mkdir -p build
+          cd build
+          cmake .. -DETHASHCUDA=ON
+          cmake --build . -- -j$(nproc)
+          cd ..
+
+      - name: Package for HiveOS
+        env:
+          TAG_VERSION: ${{ github.event.inputs.tag_version }}
+        run: |
+          mkdir -p hiveos_packager/quai_custom
+          cp build/ethcoreminer/ethcoreminer hiveos_packager/quai_custom/ethcoreminer_bin
+          chmod a+rwx hiveos_packager/quai_custom/*
+          cd hiveos_packager
+          tar -zcvf quai_custom-${TAG_VERSION}.tar.gz quai_custom
+          mv quai_custom-${TAG_VERSION}.tar.gz ../
+          cd ..
+
+      - name: Commit and Push Changes
+        env:
+          HUSKY: 0
+        run: |
+          git add hiveos_packager/quai_custom/ethcoreminer_bin
+          git commit -m "Automated build and packaging for version ${TAG_VERSION}"
+          git push origin HEAD:${{ github.event.inputs.branch }}
+
+      - name: Create and Push Signed Tag
+        env:
+          TAG_VERSION: ${{ github.event.inputs.tag_version }}
+          HUSKY: 0
+        run: |
+          git tag -s "${TAG_VERSION}" -m "Release ${TAG_VERSION}"
+          git push origin "${TAG_VERSION}"
+
