@@ -101,8 +101,6 @@ jobs:
           cd ..
 
       - name: Commit and Push Changes
-        env:
-          HUSKY: 0
         run: |
           git add hiveos_packager/quai_custom/ethcoreminer_bin
           git commit -m "Automated build and packaging for version ${TAG_VERSION}"
@@ -111,7 +109,6 @@ jobs:
       - name: Create and Push Signed Tag
         env:
           TAG_VERSION: ${{ github.event.inputs.tag_version }}
-          HUSKY: 0
         run: |
           git tag -s "${TAG_VERSION}" -m "Release ${TAG_VERSION}"
           git push origin "${TAG_VERSION}"
