@@ -7,7 +7,7 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeCommandArgs": "-Wno-dev --warn-unused-vars -DDEVBUILD=ON -DCOMPUTE=86",
+      "cmakeCommandArgs": "-Wno-dev --warn-unused-vars -DDEVBUILD=ON -DCOMPUTE=90",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "variables": []
