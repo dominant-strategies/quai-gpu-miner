@@ -11,12 +11,21 @@ include(defaults/HunterCacheServers)
 
 cable_configure_toolchain(DEFAULT cxx11)
 
+# Detect the number of available cores
+find_program(NPROC nproc)
+if (NPROC)
+    execute_process(COMMAND ${NPROC} OUTPUT_VARIABLE N_CORES OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(HUNTER_JOBS_NUMBER ${N_CORES} CACHE STRING "Number of parallel builds used by Hunter")
+else()
+    set(HUNTER_JOBS_NUMBER 6 CACHE STRING "Number of parallel builds used by Hunter")
+endif()
+
 set(HUNTER_CONFIGURATION_TYPES Release CACHE STRING "Build type of Hunter packages")
-set(HUNTER_JOBS_NUMBER 6 CACHE STRING "Number of parallel builds used by Hunter")
+
 HunterGate(
     URL "https://github.com/ruslo/hunter/archive/v0.23.214.tar.gz"
     SHA1 "e14bc153a7f16d6a5eeec845fb0283c8fad8c358"
-	LOCAL
+    LOCAL
 )
 
 cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo)
@@ -33,24 +42,24 @@ option(DEVBUILD "Log developer metrics" OFF)
 
 # propagates CMake configuration options to the compiler
 function(configureProject)
-	if (ETHASHCL)
-		add_definitions(-DETH_ETHASHCL)
-	endif()
-	if (ETHASHCUDA)
-		add_definitions(-DETH_ETHASHCUDA)
-	endif()
-	if (ETHASHCPU)
-		add_definitions(-DETH_ETHASHCPU)
-	endif()
-	if (ETHDBUS)
-		add_definitions(-DETH_DBUS)
-	endif()
-	if (APICORE)
-		add_definitions(-DAPI_CORE)
-	endif()
-	if (DEVBUILD)
-		add_definitions(-DDEV_BUILD)
-	endif()
+    if (ETHASHCL)
+        add_definitions(-DETH_ETHASHCL)
+    endif()
+    if (ETHASHCUDA)
+        add_definitions(-DETH_ETHASHCUDA)
+    endif()
+    if (ETHASHCPU)
+        add_definitions(-DETH_ETHASHCPU)
+    endif()
+    if (ETHDBUS)
+        add_definitions(-DETH_DBUS)
+    endif()
+    if (APICORE)
+        add_definitions(-DAPI_CORE)
+    endif()
+    if (DEVBUILD)
+        add_definitions(-DDEV_BUILD)
+    endif()
 endfunction()
 
 hunter_add_package(Boost COMPONENTS system filesystem thread)
@@ -79,7 +88,6 @@ if(UNIX AND NOT APPLE)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++")
 endif()
 
-
 cable_add_buildinfo_library(PROJECT_NAME ${PROJECT_NAME})
 
 include_directories(${PROJECT_SOURCE_DIR}/libethash)
@@ -92,25 +100,24 @@ add_subdirectory(libhwmon)
 add_subdirectory(libpoolprotocols)
 
 if (ETHASHCL)
-	add_subdirectory(libethash-cl)
+    add_subdirectory(libethash-cl)
 endif ()
 if (ETHASHCUDA)
-	add_subdirectory(libethash-cuda)
+    add_subdirectory(libethash-cuda)
 endif ()
 if (ETHASHCPU)
-	add_subdirectory(libethash-cpu)
+    add_subdirectory(libethash-cpu)
 endif ()
 if (APICORE)
-	add_subdirectory(libapicore)
+    add_subdirectory(libapicore)
 endif()
 
 add_subdirectory(kawpowminer)
 
-
 if(WIN32)
-	set(CPACK_GENERATOR ZIP)
+    set(CPACK_GENERATOR ZIP)
 else()
-	set(CPACK_GENERATOR TGZ)
+    set(CPACK_GENERATOR TGZ)
 endif()
 set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME})
 set(CPACK_PACKAGE_CHECKSUM SHA256)
