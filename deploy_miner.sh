@@ -8,7 +8,7 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-# install dependencies
+# Install dependencies
 if ! command -v cmake &> /dev/null; then
   echo "installing dependencies"
   apt update && apt install -y build-essential cmake mesa-common-dev git wget
@@ -30,19 +30,22 @@ else
     echo "CUDA toolkit 12.6 is already installed."
 fi
 
-# clone quai-gpu-miner
+echo "All dependencies installed successfully!"
+
+# Clone quai-gpu-miner
 git clone https://github.com/dominant-strategies/quai-gpu-miner
 cd quai-gpu-miner
 git submodule update --init --recursive
 mkdir build && cd build
 
-# configure cmake
+# Configure cmake
 cmake .. -DETHASHCUDA=ON -DETHASHCL=ON
 
-# build cmake
+# Build binary
 cmake --build .
 
-mkdir -p ../../output && cp kawpowminer/kawpowminer ../../output/quai-gpu-miner
+# Copy output binary
+mkdir -p ../../output && mv kawpowminer/kawpowminer ../../output/quai-gpu-miner
 
 # Finish
 echo "All tasks completed successfully!"

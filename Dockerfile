@@ -16,11 +16,11 @@ RUN apt update && apt install -y \
     apt update && apt install -y cuda-toolkit-12-6 && \
     rm -rf /var/lib/apt/lists/* /cuda-keyring_1.1-1_all.deb
 
-# Copy your bash script into the container
-COPY ubuntu_deploy_script.sh .
+# Copy dependency and build scripts into the container
+COPY deploy_miner.sh .
 
 # Make the script executable
-RUN chmod +x ubuntu_deploy_script.sh
+RUN chmod +x deploy_miner.sh
 
 # Run the script to build the binary
-CMD ["./ubuntu_deploy_script.sh"]
+CMD ["./deploy_miner.sh"]
