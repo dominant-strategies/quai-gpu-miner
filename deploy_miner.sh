@@ -35,7 +35,7 @@ echo "All dependencies installed successfully!"
 # Clone quai-gpu-miner
 git clone https://github.com/dominant-strategies/quai-gpu-miner
 cd quai-gpu-miner
-git switch hive-build
+git checkout hive-build
 git submodule update --init --recursive
 mkdir build && cd build
 
@@ -46,13 +46,13 @@ cmake .. -DETHASHCUDA=ON -DETHASHCL=ON
 cmake --build .
 
 # Copy binary to output folder
-mkdir -p ../../output && mv kawpowminer/kawpowminer ../../output/quai-gpu-miner
+mkdir -p ../../output && cp kawpowminer/kawpowminer ../../output/quai-gpu-miner
 
 # Create HiveOS package
-cp -r kawpowminer/kawpowminer hiveos_packager/quai-gpu-miner
+cd ../ && mv build/kawpowminer/kawpowminer hiveos_packager/quai-gpu-miner
 chmod a+rwx hiveos_packager/*
-tar -zcvf quai-gpu-miner.tar.gz quai-miner
-mv quai-miner output
+tar -zcvf quai-gpu-miner.tar.gz hiveos_packager/quai-gpu-miner
+mv quai-gpu-miner.tar.gz output
 
 # Finish
 echo "All tasks completed successfully!"
