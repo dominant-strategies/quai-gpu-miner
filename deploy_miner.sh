@@ -44,8 +44,14 @@ cmake .. -DETHASHCUDA=ON -DETHASHCL=ON
 # Build binary
 cmake --build .
 
-# Copy output binary
-mkdir -p ../../output && mv kawpowminer/kawpowminer ../../output/quai-gpu-miner
+# Copy binary to output folder
+mkdir -p ../../output && cp kawpowminer/kawpowminer ../../output/quai-gpu-miner
+
+# Create HiveOS package
+cd ../ && mv build/kawpowminer/kawpowminer hiveos_packager/quai-gpu-miner
+chmod a+rwx hiveos_packager/*
+tar -zcvf quai-gpu-miner.tar.gz hiveos_packager/
+mv quai-gpu-miner.tar.gz ../output
 
 # Finish
 echo "All tasks completed successfully!"
