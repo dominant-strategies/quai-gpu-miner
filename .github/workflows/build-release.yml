@@ -84,5 +84,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.event.inputs.tag_version }} output/quai-gpu-miner --title "${{ github.event.inputs.tag_version }}"
+          gh release create ${{ github.event.inputs.tag_version }} output/quai-gpu-miner output/quai-gpu-miner.tar.gz --title "${{ github.event.inputs.tag_version }}"
       
