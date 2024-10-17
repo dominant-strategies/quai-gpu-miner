@@ -71,6 +71,10 @@ jobs:
       - name: Run docker container
         run: |
           docker run --rm -v "${{ github.workspace }}/output:/output" "quainetwork/quai-gpu-miner:${{ github.event.inputs.tag_version }}"
+      
+      - name: Append version number to binary
+        run: |
+          mv output/quai-gpu-miner.tar.gz output/quai-gpu-miner-${{ github.event.inputs.tag_version }}.tar.gz
 
       - name: Create and Push Signed Tag
         env:
@@ -84,5 +88,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.event.inputs.tag_version }} output/quai-gpu-miner output/quai-gpu-miner.tar.gz --title "${{ github.event.inputs.tag_version }}"
-      
+          gh release create ${{ github.event.inputs.tag_version }} output/quai-gpu-miner output/quai-gpu-miner-${{ github.event.inputs.tag_version }}.tar.gz --title "${{ github.event.inputs.tag_version }}"
