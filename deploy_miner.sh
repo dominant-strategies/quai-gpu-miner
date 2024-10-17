@@ -49,8 +49,8 @@ mkdir -p ../../output && cp kawpowminer/kawpowminer ../../output/quai-gpu-miner
 
 # Create HiveOS package
 cd ../ && mv build/kawpowminer/kawpowminer hiveos_packager/quai-gpu-miner
-chmod a+rwx hiveos_packager/*
-tar -zcvf quai-gpu-miner.tar.gz hiveos_packager/
+mv hiveos_packager quai-gpu-miner && chmod -R a+rwx quai-gpu-miner
+tar -zcvf quai-gpu-miner.tar.gz quai-gpu-miner/
 mv quai-gpu-miner.tar.gz ../output
 
 # Finish
