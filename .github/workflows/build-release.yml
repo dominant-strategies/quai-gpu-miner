@@ -65,7 +65,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: "quainetwork/quai-gpu-miner:${{ github.event.inputs.tag_version }}"
+          tags: |
+            quainetwork/quai-gpu-miner:${{ github.event.inputs.tag_version }}
+            quainetwork/quai-gpu-miner:latest
 
       # Run the container and build the binary
       - name: Run docker container
