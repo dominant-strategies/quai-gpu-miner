@@ -64,7 +64,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: dockerfile.build
+          file: Dockerfile.build
           push: true
           tags: |
             quainetwork/quai-gpu-miner-build:${{ github.event.inputs.tag_version }}
@@ -79,11 +79,12 @@ jobs:
         run: |
           sudo mv output/quai-gpu-miner.tar.gz output/quai-gpu-miner-${{ github.event.inputs.tag_version }}.tar.gz
 
-      - name: Build the dockerfile.run image (no push)
+      # Build the dockerfile.run image (no push)
+      - name: Build the dockerfile.run image
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: dockerfile.run
+          file: Dockerfile.run
           push: false
           tags: |
             quainetwork/quai-gpu-miner-run:${{ github.event.inputs.tag_version }}
