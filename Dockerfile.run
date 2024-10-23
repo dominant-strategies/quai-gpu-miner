@@ -1,5 +1,5 @@
 # Use an Ubuntu image or another suitable base image
-FROM quainetwork/quai-gpu-miner:v0.2.0
+FROM quainetwork/quai-gpu-miner-build:latest
 
 RUN ./deploy_miner.sh
 

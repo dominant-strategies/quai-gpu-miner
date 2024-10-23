@@ -59,24 +59,35 @@ jobs:
           username: quaibuild
           password: ${{ secrets.DOCKER }}
 
-      # Build and push the Docker image
-      - name: Build and push
+      # Build and push the dockerfile.build image
+      - name: Build and push dockerfile.build
         uses: docker/build-push-action@v5
         with:
           context: .
+          dockerfile: dockerfile.build
           push: true
           tags: |
-            quainetwork/quai-gpu-miner:${{ github.event.inputs.tag_version }}
-            quainetwork/quai-gpu-miner:latest
+            quainetwork/quai-gpu-miner-build:${{ github.event.inputs.tag_version }}
+            quainetwork/quai-gpu-miner-build:latest
 
-      # Run the container and build the binary
-      - name: Run docker container
+      # Run the container and build the binary using the build image
+      - name: Run docker container (build)
         run: |
-          docker run --rm -v "${{ github.workspace }}/output:/output" "quainetwork/quai-gpu-miner:${{ github.event.inputs.tag_version }}"
+          docker run --rm -v "${{ github.workspace }}/output:/output" "quainetwork/quai-gpu-miner-build:${{ github.event.inputs.tag_version }}"
       
       - name: Append version number to binary
         run: |
           sudo mv output/quai-gpu-miner.tar.gz output/quai-gpu-miner-${{ github.event.inputs.tag_version }}.tar.gz
+
+      - name: Build the dockerfile.run image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          dockerfile: dockerfile.run
+          push: false
+          tags: |
+            quainetwork/quai-gpu-miner-run:${{ github.event.inputs.tag_version }}
+            quainetwork/quai-gpu-miner-run:latest
 
       - name: Create and Push Signed Tag
         env:
