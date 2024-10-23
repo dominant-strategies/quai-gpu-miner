@@ -4,7 +4,7 @@ FROM ubuntu:20.04
 # Set environment variables to avoid user interaction during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install required dependencies including CUDA
+# Install required dependencies including CUDA toolkit
 RUN apt update && apt install -y \
     build-essential \
     cmake \
@@ -16,10 +16,10 @@ RUN apt update && apt install -y \
     apt update && apt install -y cuda-toolkit-12-6 && \
     rm -rf /var/lib/apt/lists/* /cuda-keyring_1.1-1_all.deb
 
-# Copy dependency and build scripts into the container
+# Copy dependency and build script into the container
 COPY deploy_miner.sh .
 
-# Make the script executable
+# Make deploy script executable
 RUN chmod +x deploy_miner.sh
 
 # Run the script to build the binary
