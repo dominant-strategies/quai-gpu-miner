@@ -79,17 +79,6 @@ jobs:
         run: |
           sudo mv output/quai-gpu-miner.tar.gz output/quai-gpu-miner-${{ github.event.inputs.tag_version }}.tar.gz
 
-      # Build the dockerfile.run image (no push)
-      - name: Build the dockerfile.run image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Dockerfile.run
-          push: false
-          tags: |
-            quainetwork/quai-gpu-miner-run:${{ github.event.inputs.tag_version }}
-            quainetwork/quai-gpu-miner-run:latest
-
       - name: Create and Push Signed Tag
         env:
           TAG_VERSION: ${{ github.event.inputs.tag_version }}
