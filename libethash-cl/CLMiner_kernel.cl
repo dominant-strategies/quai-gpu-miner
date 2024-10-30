@@ -1,3 +1,5 @@
+PROGPOW_REPLACE_HEADER
+
 #define OPENCL_PLATFORM_UNKNOWN 0
 #define OPENCL_PLATFORM_NVIDIA 1
 #define OPENCL_PLATFORM_AMD 2
@@ -32,24 +34,6 @@ __constant const uint32_t keccakf_rndc[24] = {0x00000001, 0x00008082, 0x0000808a
     0x0000808b, 0x80000001, 0x80008081, 0x00008009, 0x0000008a, 0x00000088, 0x80008009, 0x8000000a,
     0x8000808b, 0x0000008b, 0x00008089, 0x00008003, 0x00008002, 0x00000080, 0x0000800a, 0x8000000a,
     0x80008081, 0x00008080, 0x80000001, 0x80008008};
-
-__constant const uint32_t ravencoin_rndc[15] = {
-        0x00000072, //R
-        0x00000041, //A
-        0x00000056, //V
-        0x00000045, //E
-        0x0000004E, //N
-        0x00000043, //C
-        0x0000004F, //O
-        0x00000049, //I
-        0x0000004E, //N
-        0x0000004B, //K
-        0x00000041, //A
-        0x00000057, //W
-        0x00000050, //P
-        0x0000004F, //O
-        0x00000057, //W
-};
 
 // Implementation of the Keccakf transformation with a width of 800
 void keccak_f800_round(uint32_t st[25], const int r)
@@ -97,13 +81,29 @@ void keccak_f800_round(uint32_t st[25], const int r)
 // Keccak - implemented as a variant of SHAKE
 // The width is 800, with a bitrate of 576, a capacity of 224, and no padding
 // Only need 64 bits of output for mining
-uint64_t keccak_f800(uint32_t* st)
+uint64_t keccak_f800(__constant hash32_t const* g_header, uint64_t seed, hash32_t digest)
 {
-    // Complete all 22 rounds as a separate impl to
-    // evaluate only first 8 words is wasteful of regsters
-    for (int r = 0; r < 22; r++) {
+    uint32_t st[25];
+
+    for (int i = 0; i < 25; i++)
+        st[i] = 0;
+    for (int i = 0; i < 8; i++)
+        st[i] = g_header->uint32s[i];
+    st[8] = seed;
+    st[9] = seed >> 32;
+    for (int i = 0; i < 8; i++)
+        st[10 + i] = digest.uint32s[i];
+
+    for (int r = 0; r < 21; r++)
+    {
         keccak_f800_round(st, r);
     }
+    // last round can be simplified due to partial output
+    keccak_f800_round(st, 21);
+
+    // Byte swap so byte 0 of hash is MSB of result
+    uint64_t res = (uint64_t)st[1] << 32 | st[0];
+    return as_ulong(as_uchar8(res).s76543210);
 }
 
 #define fnv1a(h, d) (h = (h ^ d) * FNV_PRIME)
@@ -128,14 +128,14 @@ uint32_t kiss99(kiss99_t* st)
     return ((MWC ^ st->jcong) + st->jsr);
 }
 
-void fill_mix(local uint32_t* seed, uint32_t lane_id, uint32_t* mix)
+void fill_mix(uint64_t seed, uint32_t lane_id, uint32_t mix[PROGPOW_REGS])
 {
     // Use FNV to expand the per-warp seed to per-lane
     // Use KISS to expand the per-lane seed to fill mix
-    uint32_t fnv_hash = FNV_OFFSET_BASIS;
+    uint32_t fnv_hash = 0x811c9dc5;
     kiss99_t st;
-    st.z = fnv1a(fnv_hash, seed[0]);
-    st.w = fnv1a(fnv_hash, seed[1]);
+    st.z = fnv1a(fnv_hash, seed);
+    st.w = fnv1a(fnv_hash, seed >> 32);
     st.jsr = fnv1a(fnv_hash, lane_id);
     st.jcong = fnv1a(fnv_hash, lane_id);
 #pragma unroll
@@ -193,39 +193,13 @@ ethash_search(__global struct SearchResults* restrict g_output, __constant hash3
             c_dag[word + i] = load.s[i];
     }
 
-    // Sync threads so shared mem is in sync
+    hash32_t digest;
+    for (int i = 0; i < 8; i++)
+        digest.uint32s[i] = 0;
+    // keccak(header..nonce)
+    uint64_t seed = keccak_f800(g_header, start_nonce + gid, digest);
+
     barrier(CLK_LOCAL_MEM_FENCE);
-
-
-//uint32_t state[25];     // Keccak's state
-uint32_t hash_seed[2];  // KISS99 initiator
-hash32_t digest;        // Carry-over from mix output
-
-uint32_t state2[8];
-
-{
-    // Absorb phase for initial round of keccak
-
-    uint32_t state[25] = {0x0};     // Keccak's state
-
-    // 1st fill with header data (8 words)
-    for (int i = 0; i < 8; i++)
-        state[i] = g_header->uint32s[i];
-
-    // 2nd fill with nonce (2 words)
-    state[8] = nonce;
-    state[9] = nonce >> 32;
-
-    // 3rd apply ravencoin input constraints
-    for (int i = 10; i < 25; i++)
-        state[i] = ravencoin_rndc[i-10];
-
-    // Run intial keccak round
-    keccak_f800(state);
-
-    for (int i = 0; i < 8; i++)
-        state2[i] = state[i];
-}
 
 #pragma unroll 1
     for (uint32_t h = 0; h < PROGPOW_LANES; h++)
@@ -233,19 +207,18 @@ uint32_t state2[8];
         uint32_t mix[PROGPOW_REGS];
 
         // share the hash's seed across all lanes
-        if (lane_id == h) {
-            share[group_id].uint32s[0] = state2[0];
-            share[group_id].uint32s[1] = state2[1];
-        }
-
+        if (lane_id == h)
+            share[group_id].uint64s[0] = seed;
         barrier(CLK_LOCAL_MEM_FENCE);
+        uint64_t hash_seed = share[group_id].uint64s[0];
 
         // initialize mix for all lanes
-        fill_mix(share[group_id].uint32s, lane_id, mix);
+        fill_mix(hash_seed, lane_id, mix);
 
-#pragma unroll 1
-        for (uint32_t l = 0; l < PROGPOW_CNT_DAG; l++)
-            progPowLoop(l, mix, g_dag, c_dag, share[0].uint64s, hack_false);
+#pragma unroll 2
+        for (uint32_t loop = 0; loop < PROGPOW_CNT_DAG; loop++) {
+            PROGPOW_REPLACE_MATH
+		}
 
         // Reduce mix data to a per-lane 32-bit digest
         uint32_t mix_hash = FNV_OFFSET_BASIS;
@@ -266,38 +239,11 @@ uint32_t state2[8];
             digest = digest_temp;
     }
 
-
-    // Absorb phase for last round of keccak (256 bits)
-    uint64_t result;
-
-    {
-        uint32_t state[25] = {0x0};     // Keccak's state
-
-        // 1st initial 8 words of state are kept as carry-over from initial keccak
-        for (int i = 0; i < 8; i++)
-            state[i] = state2[i];
-
-        // 2nd subsequent 8 words are carried from digest/mix
-        for (int i = 8; i < 16; i++)
-            state[i] = digest.uint32s[i - 8];
-
-        // 3rd apply ravencoin input constraints
-        for (int i = 16; i < 25; i++)
-            state[i] = ravencoin_rndc[i - 16];
-
-        // Run keccak loop
-        keccak_f800(state);
-
-        uint64_t res = (uint64_t)state[1] << 32 | state[0];
-        result = as_ulong(as_uchar8(res).s76543210);
-    }
-
-
     if (lid == 0)
         atomic_inc(&g_output->hashCount);
 
     // keccak(header .. keccak(header..nonce) .. digest);
-    if (result <= target)
+    if (keccak_f800(g_header, seed, digest) <= target)
     {
         uint slot = atomic_inc(&g_output->count);
         if (slot < MAX_OUTPUTS)
@@ -322,8 +268,6 @@ uint32_t state2[8];
 
 #define ETHASH_DATASET_PARENTS 512
 #define NODE_WORDS (64 / 4)
-
-#define FNV_PRIME 0x01000193
 
 __constant uint2 const Keccak_f1600_RC[24] = {
     (uint2)(0x00000001, 0x00000000),
@@ -569,27 +513,33 @@ static void SHA3_512(uint2* s, uint isolate)
     keccak_f1600_no_absorb(s, 8, isolate);
 }
 
+static uint fast_mod(uint a, uint4 d)
+{
+	const ulong t = a;
+	const uint q = ((t + d.y) * d.x) >> d.z;
+	return a - q * d.w;
+}
+
 __kernel void ethash_calculate_dag_item(
-    uint start, __global hash64_t const* g_light, __global hash64_t* g_dag, uint isolate)
+    uint start, __global hash64_t const* g_light, __global hash64_t* g_dag, uint isolate, uint dag_words, uint4 light_words)
 {
     uint const node_index = start + get_global_id(0);
-    if (node_index * sizeof(hash64_t) >= PROGPOW_DAG_BYTES)
-        return;
+	if (node_index >= dag_words)
+		return;
 
-    hash200_t dag_node;
-    copy(dag_node.uint4s, g_light[node_index % LIGHT_WORDS].uint4s, 4);
-    dag_node.words[0] ^= node_index;
-    SHA3_512(dag_node.uint2s, isolate);
+	hash200_t dag_node;
+	copy(dag_node.uint4s, g_light[fast_mod(node_index, light_words)].uint4s, 4);
+	dag_node.words[0] ^= node_index;
+	SHA3_512(dag_node.uint2s, isolate);
 
-    for (uint i = 0; i != ETHASH_DATASET_PARENTS; ++i)
-    {
-        uint parent_index = fnv(node_index ^ i, dag_node.words[i % NODE_WORDS]) % LIGHT_WORDS;
+	for (uint i = 0; i != ETHASH_DATASET_PARENTS; ++i)
+	{
+		uint parent_index = fast_mod(fnv(node_index ^ i, dag_node.words[i % NODE_WORDS]), light_words);
 
-        for (uint w = 0; w != 4; ++w)
-        {
-            dag_node.uint4s[w] = fnv4(dag_node.uint4s[w], g_light[parent_index].uint4s[w]);
-        }
-    }
-    SHA3_512(dag_node.uint2s, isolate);
-    copy(g_dag[node_index].uint4s, dag_node.uint4s, 4);
+		for (uint w = 0; w != 4; ++w)
+			dag_node.uint4s[w] = fnv4(dag_node.uint4s[w], g_light[parent_index].uint4s[w]);
+	}
+
+	SHA3_512(dag_node.uint2s, isolate);
+	copy(g_dag[node_index].uint4s, dag_node.uint4s, 4);
 }
