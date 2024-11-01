@@ -36,22 +36,36 @@ echo "All dependencies installed successfully!"
 git clone https://github.com/dominant-strategies/quai-gpu-miner
 cd quai-gpu-miner
 git submodule update --init --recursive
+
+# First build with CUDA enabled and OpenCL disabled
 mkdir build && cd build
-
-# Configure cmake
-cmake .. -DETHASHCUDA=ON -DETHASHCL=ON
-
-# Build binary
+cmake .. -DETHASHCUDA=ON -DETHASHCL=OFF
 cmake --build .
+mkdir -p ../../output && cp kawpowminer/kawpowminer ../../output/quai-gpu-miner-nvidia
 
-# Copy binary to output folder
-mkdir -p ../../output && cp kawpowminer/kawpowminer ../../output/quai-gpu-miner
+# Copy hiveos_packager for NVIDIA package
+cd ../
+cp -r hiveos_packager hiveos_packager_nvidia
+cp ../../output/quai-gpu-miner-nvidia hiveos_packager_nvidia/quai-gpu-miner-nvidia
+chmod -R a+rwx hiveos_packager_nvidia
+tar -zcvf quai-gpu-miner-nvidia.tar.gz hiveos_packager_nvidia/
+mv quai-gpu-miner-nvidia.tar.gz ../output
 
-# Create HiveOS package
-cd ../ && mv build/kawpowminer/kawpowminer hiveos_packager/quai-gpu-miner
-mv hiveos_packager quai-gpu-miner && chmod -R a+rwx quai-gpu-miner
-tar -zcvf quai-gpu-miner.tar.gz quai-gpu-miner/
-mv quai-gpu-miner.tar.gz ../output
+# Clean build directory for the second build
+rm -rf build && mkdir build && cd build
+
+# Second build with OpenCL enabled and CUDA disabled
+cmake .. -DETHASHCUDA=OFF -DETHASHCL=ON
+cmake --build .
+cp kawpowminer/kawpowminer ../../output/quai-gpu-miner-amd
+
+# Copy hiveos_packager for AMD package
+cd ../
+cp -r hiveos_packager hiveos_packager_amd
+cp ../../output/quai-gpu-miner-amd hiveos_packager_amd/quai-gpu-miner-amd
+chmod -R a+rwx hiveos_packager_amd
+tar -zcvf quai-gpu-miner-amd.tar.gz hiveos_packager_amd/
+mv quai-gpu-miner-amd.tar.gz ../output
 
 # Finish
 echo "All tasks completed successfully!"
