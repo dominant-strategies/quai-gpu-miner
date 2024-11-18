@@ -1566,8 +1566,7 @@ void EthStratumClient::processResponse(Json::Value& responseObject)
             if (!processExtranonce(enonce))
             {
                 cwarn << "Disconnecting ...";
-                m_io_service.post(
-                    m_io_strand.wrap(boost::bind(&EthStratumClient::disconnect, this)));
+                return;
             }
         }
         else if (_method == "mining.set_target") {
