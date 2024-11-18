@@ -1822,7 +1822,8 @@ void EthStratumClient::onRecvSocketDataCompleted(
         if (m_newjobprocessed) {
             if (m_onWorkReceived) {
                 if (m_epochChanged) {
-                    Farm::f().restart();
+                    cwarn << "Epoch changed, restarting mining process on new DAG";
+                    Farm::f().restart_process();
                     m_epochChanged = false;
                 }
                 m_onWorkReceived(m_current);

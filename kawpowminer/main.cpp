@@ -1279,6 +1279,11 @@ private:
 #endif
 };
 
+void signal_handler(int signum) {
+    std::cout << "Signal received, terminating process group." << std::endl;
+    killpg(0, signum);  // Send signal to all processes in the group
+}
+
 int main(int argc, char** argv)
 {
     // Return values
@@ -1293,6 +1298,9 @@ int main(int argc, char** argv)
     // UTF-8 characters are displayed correctly in the console
     SetConsoleOutputCP(CP_UTF8);
 #endif
+    
+    setpgid(0, 0);
+    signal (SIGINT, signal_handler);
 
     // Always out release version
     auto* bi = kawpowminer_get_buildinfo();
