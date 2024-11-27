@@ -77,7 +77,8 @@ jobs:
       
       - name: Append version number to binary
         run: |
-          sudo mv output/quai-gpu-miner.tar.gz output/quai-gpu-miner-${{ github.event.inputs.tag_version }}.tar.gz
+          sudo mv output/quai-gpu-miner-amd.tar.gz output/quai-gpu-miner-amd-${{ github.event.inputs.tag_version }}.tar.gz
+          sudo mv output/quai-gpu-miner-nvidia.tar.gz output/quai-gpu-miner-nvidia-${{ github.event.inputs.tag_version }}.tar.gz
 
       - name: Create and Push Signed Tag
         env:
@@ -87,8 +88,11 @@ jobs:
           git tag -s "${{ github.event.inputs.tag_version }}" -m "Release ${{ github.event.inputs.tag_version }}"
           git push origin "${{ github.event.inputs.tag_version }}"
       
-      - name: Create GitHub Release and Upload Asset
+      - name: Create GitHub Release and Upload Assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.event.inputs.tag_version }} output/quai-gpu-miner output/quai-gpu-miner-${{ github.event.inputs.tag_version }}.tar.gz --title "${{ github.event.inputs.tag_version }}"
+          gh release create ${{ github.event.inputs.tag_version }} \
+            output/quai-gpu-miner-amd output/quai-gpu-miner-amd-${{ github.event.inputs.tag_version }}.tar.gz \
+            output/quai-gpu-miner-nvidia output/quai-gpu-miner-nvidia-${{ github.event.inputs.tag_version }}.tar.gz \
+            --title "${{ github.event.inputs.tag_version }}"
