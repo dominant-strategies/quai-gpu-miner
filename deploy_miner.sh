@@ -41,7 +41,7 @@ git submodule update --init --recursive
 mkdir build && cd build
 cmake .. -DETHASHCUDA=ON -DETHASHCL=OFF
 cmake --build .
-mkdir -p ../../output && cp kawpowminer/kawpowminer ../../output/quai-gpu-miner-nvidia
+mkdir -p ../../output && cp kawpowminer/quai-gpu-miner ../../output/quai-gpu-miner-nvidia
 
 # Copy hiveos_packager for NVIDIA package
 cd ../
@@ -57,7 +57,7 @@ rm -rf build && mkdir build && cd build
 # Second build with OpenCL enabled and CUDA disabled
 cmake .. -DETHASHCUDA=OFF -DETHASHCL=ON
 cmake --build .
-cp kawpowminer/kawpowminer ../../output/quai-gpu-miner-amd
+cp kawpowminer/quai-gpu-miner ../../output/quai-gpu-miner-amd
 
 # Copy hiveos_packager for AMD package
 cd ../
