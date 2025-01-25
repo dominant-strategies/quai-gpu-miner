@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-[[ `pgrep -f "quai-gpu-miner --api-bind" | wc -l` != 0 ]] &&
+[[ `pgrep -f "quai-gpu-miner-amd --api-bind" | wc -l` != 0 ]] &&
   echo -e "${RED}$CUSTOM_NAME miner is already running${NOCOLOR}" &&
   exit 1
 
@@ -12,6 +12,6 @@ if [[ $conf =~ ';' ]]; then
     conf=`echo $conf | tr -d '\\'`
 fi
 
-eval "unbuffer ./quai-gpu-miner ${conf//;/'\;'} --api-bind 127.0.0.1:21373"
+eval "unbuffer ./quai-gpu-miner-amd ${conf//;/'\;'} --api-bind 127.0.0.1:21373"
 
 sleep 10
