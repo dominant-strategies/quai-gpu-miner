@@ -20,7 +20,7 @@
 // random math instructions per loop
 #define PROGPOW_CNT_MATH        18
 
-#define EPOCH_LENGTH            129600 // 4320 primes per day * 30 days
+#define EPOCH_LENGTH            388800 // 4320 primes per day * 90 days
 
 class ProgPow
 {
