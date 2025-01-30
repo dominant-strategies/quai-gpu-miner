@@ -85,7 +85,6 @@ private:
 
     int lastSessionId = 0;
 
-    std::thread m_workThread;
     std::atomic<bool> m_readonly = {false};
     std::string m_password = "";
     std::atomic<bool> m_running = {false};
