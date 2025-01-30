@@ -33,7 +33,7 @@ fi
 echo "All dependencies installed successfully!"
 
 # Clone quai-gpu-miner
-git clone https://github.com/dominant-strategies/quai-gpu-miner
+git clone https://github.com/guruchaithanya/quai-gpu-miner
 cd quai-gpu-miner
 git submodule update --init --recursive
 
