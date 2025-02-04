@@ -135,6 +135,13 @@ public:
     bool reboot(const std::vector<std::string>& args);
 
     /**
+     * @brief Sends signal to restart entire mining process
+     * 
+     * @return false if process failed to fork or restart
+     */
+    bool restart_process();
+
+    /**
      * @brief Get information on the progress of mining this work package.
      * @return The progress with mining so far.
      */

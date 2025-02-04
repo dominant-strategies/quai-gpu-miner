@@ -1566,8 +1566,7 @@ void EthStratumClient::processResponse(Json::Value& responseObject)
             if (!processExtranonce(enonce))
             {
                 cwarn << "Disconnecting ...";
-                m_io_service.post(
-                    m_io_strand.wrap(boost::bind(&EthStratumClient::disconnect, this)));
+                return;
             }
         }
         else if (_method == "mining.set_target") {
@@ -1822,7 +1821,8 @@ void EthStratumClient::onRecvSocketDataCompleted(
         if (m_newjobprocessed) {
             if (m_onWorkReceived) {
                 if (m_epochChanged) {
-                    Farm::f().restart();
+                    cwarn << "Epoch changed, restarting mining process on new DAG";
+                    Farm::f().restart_process();
                     m_epochChanged = false;
                 }
                 m_onWorkReceived(m_current);

@@ -41,12 +41,12 @@ git submodule update --init --recursive
 mkdir build && cd build
 cmake .. -DETHASHCUDA=ON -DETHASHCL=OFF
 cmake --build .
-mkdir -p ../../output && cp kawpowminer/kawpowminer ../../output/quai-gpu-miner-nvidia
+mkdir -p ../../output && cp kawpowminer/quai-gpu-miner ../../output/quai-gpu-miner-nvidia
 
 # Copy hiveos_packager for NVIDIA package
 cd ../
-cp -r hiveos_packager quai-gpu-miner-nvidia
-cp ../../output/quai-gpu-miner-nvidia quai-gpu-miner-nvidia/quai-gpu-miner
+cp -r hiveos_packager_nvidia quai-gpu-miner-nvidia
+cp ../../output/quai-gpu-miner-nvidia quai-gpu-miner-nvidia/quai-gpu-miner-nvidia
 chmod -R a+rwx quai-gpu-miner-nvidia
 tar -zcvf quai-gpu-miner-nvidia.tar.gz quai-gpu-miner-nvidia/
 mv quai-gpu-miner-nvidia.tar.gz ../output
@@ -57,12 +57,12 @@ rm -rf build && mkdir build && cd build
 # Second build with OpenCL enabled and CUDA disabled
 cmake .. -DETHASHCUDA=OFF -DETHASHCL=ON
 cmake --build .
-cp kawpowminer/kawpowminer ../../output/quai-gpu-miner-amd
+cp kawpowminer/quai-gpu-miner ../../output/quai-gpu-miner-amd
 
 # Copy hiveos_packager for AMD package
 cd ../
-cp -r hiveos_packager quai-gpu-miner-amd
-cp ../../output/quai-gpu-miner-amd quai-gpu-miner-amd/quai-gpu-miner
+cp -r hiveos_packager_amd quai-gpu-miner-amd
+cp ../../output/quai-gpu-miner-amd quai-gpu-miner-amd/quai-gpu-miner-amd
 chmod -R a+rwx quai-gpu-miner-amd
 tar -zcvf quai-gpu-miner-amd.tar.gz quai-gpu-miner-amd/
 mv quai-gpu-miner-amd.tar.gz ../output

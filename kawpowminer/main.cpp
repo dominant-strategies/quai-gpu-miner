@@ -1279,6 +1279,11 @@ private:
 #endif
 };
 
+void signal_handler(int signum) {
+    std::cout << "Signal received, terminating process group." << std::endl;
+    killpg(0, signum);  // Send signal to all processes in the group
+}
+
 int main(int argc, char** argv)
 {
     // Return values
@@ -1293,19 +1298,22 @@ int main(int argc, char** argv)
     // UTF-8 characters are displayed correctly in the console
     SetConsoleOutputCP(CP_UTF8);
 #endif
+    
+    setpgid(0, 0);
+    signal (SIGINT, signal_handler);
 
     // Always out release version
     auto* bi = kawpowminer_get_buildinfo();
     cout << endl
          << endl
-         << "kawpowminer " << bi->project_version << endl
+         << "quai-gpu-miner " << bi->project_version << endl
          << "Build: " << bi->system_name << "/" << bi->build_type << "/" << bi->compiler_id << endl
          << endl;
 
     if (argc < 2)
     {
         cerr << "No arguments specified. " << endl
-             << "Try 'kawpowminer --help' to get a list of arguments." << endl
+             << "Try 'quai-gpu-miner --help' to get a list of arguments." << endl
              << endl;
         return 1;
     }
@@ -1358,7 +1366,7 @@ int main(int argc, char** argv)
         catch (std::invalid_argument& ex1)
         {
             cerr << "Error: " << ex1.what() << endl
-                 << "Try kawpowminer --help to get an explained list of arguments." << endl
+                 << "Try quai-gpu-miner --help to get an explained list of arguments." << endl
                  << endl;
             return 1;
         }
