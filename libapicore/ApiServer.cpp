@@ -268,8 +268,8 @@ void ApiServer::start()
 
     cnote << "Api server listening on port " + to_string(m_acceptor.local_endpoint().port())
           << (m_password.empty() ? "." : ". Authentication needed.");
-    m_workThread = std::thread{boost::bind(&ApiServer::begin_accept, this)};
     m_running.store(true, std::memory_order_relaxed);
+    begin_accept();
 }
 
 void ApiServer::stop()
@@ -280,7 +280,6 @@ void ApiServer::stop()
 
     m_acceptor.cancel();
     m_acceptor.close();
-    m_workThread.join();
     m_running.store(false, std::memory_order_relaxed);
 
     // Dispose all sessions (if any)
